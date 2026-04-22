@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WBI Dokumentations-Assistent</title>
+<style>
+:root{--bg:#f5f5f3;--card:#fff;--bd:rgba(26,26,24,.15);--bd2:rgba(26,26,24,.3);--bd3:rgba(26,26,24,.4);--tx:#1a1a18;--tx2:#5f5e5a;--tx3:#888780;--sbg:#eaf3de;--stx:#3b6d11;--ibg:#e6f1fb;--itx:#185fa5;--ibd:#b5d4f4;--wbg:#faeeda;--wtx:#854f0b;--wbd:#fac775;--dbg:#fcebeb;--dtx:#a32d2d;--r:8px;--rl:12px;--font:system-ui,-apple-system,sans-serif;--mono:ui-monospace,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--card:#1a1a18;--bd:rgba(241,239,232,.15);--bd2:rgba(241,239,232,.3);--bd3:rgba(241,239,232,.4);--tx:#f1efe8;--tx2:#b4b2a9;--tx3:#888780;--sbg:#173404;--stx:#97c459;--ibg:#042c53;--itx:#85b7eb;--ibd:#0c447c;--wbg:#412402;--wtx:#ef9f27;--wbd:#633806;--dbg:#501313;--dtx:#f09595}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);display:flex;justify-content:center;padding:2rem 1rem;min-height:100vh;font-family:var(--font)}
+.app{background:var(--card);border:0.5px solid var(--bd);border-radius:var(--rl);width:100%;max-width:740px;display:flex;flex-direction:column}
+.hdr{padding:1rem 1.5rem;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:10px}
+.hico{width:30px;height:30px;background:var(--bg);border:0.5px solid var(--bd);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hico svg{width:15px;height:15px;color:var(--tx)}
+.htitle{font-size:14px;font-weight:500;color:var(--tx)}
+.hsub{font-size:11px;color:var(--tx2);margin-top:1px}
+.badge{margin-left:auto;display:flex;align-items:center;gap:6px;padding:3px 10px;background:var(--sbg);border:0.5px solid var(--stx);border-radius:999px;font-size:11px;color:var(--stx);flex-shrink:0}
+.ai-badge{background:var(--ibg);border-color:var(--ibd);color:var(--itx)}
+.steps{display:flex;padding:0 1.5rem;border-bottom:0.5px solid var(--bd);overflow-x:auto}
+.step{display:flex;align-items:center;gap:7px;padding:.65rem 0;margin-right:1.5rem;font-size:12px;color:var(--tx3);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
+.step.active{color:var(--tx);border-bottom-color:var(--tx)}
+.step.done{color:var(--tx2)}
+.sn{width:18px;height:18px;border-radius:50%;border:0.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+.step.active .sn{background:var(--tx);color:var(--card);border-color:transparent}
+.step.done .sn{background:var(--bg)}
+.content{flex:1;padding:1.25rem 1.5rem;overflow-y:auto;max-height:570px}
+.sec{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.fg{margin-bottom:1.125rem}
+label.lbl{font-size:13px;color:var(--tx2);margin-bottom:5px;display:block}
+.hint{font-size:11px;color:var(--tx3);margin-top:3px}
+input[type=text],textarea{width:100%;padding:7px 10px;font-size:13px;font-family:var(--font);color:var(--tx);background:var(--card);border:0.5px solid var(--bd2);border-radius:var(--r);outline:none;transition:border-color .15s}
+input:focus,textarea:focus{border-color:var(--bd3)}
+textarea{resize:vertical;line-height:1.6}
+
+/* Einstieg-Kacheln */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem}
+.mode-card{padding:1.25rem;border:0.5px solid var(--bd2);border-radius:var(--rl);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:8px}
+.mode-card:hover{border-color:var(--bd3);background:var(--bg)}
+.mode-card.ai-card{border-color:var(--ibd)}
+.mode-card.ai-card:hover{background:var(--ibg)}
+.mode-icon{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px}
+.mode-name{font-size:14px;font-weight:500;color:var(--tx)}
+.mode-desc{font-size:12px;color:var(--tx2);line-height:1.4}
+
+/* AI-Step */
+.ai-box{background:var(--ibg);border:0.5px solid var(--ibd);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+.ai-box-title{font-size:13px;font-weight:500;color:var(--itx);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.ai-box-hint{font-size:11px;color:var(--itx);margin-top:4px;opacity:.8}
+.ai-loading{display:flex;align-items:center;gap:10px;padding:1rem;color:var(--itx);font-size:13px}
+.spin{width:18px;height:18px;border:2px solid var(--ibd);border-top-color:var(--itx);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.provider-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;background:var(--ibg);border:0.5px solid var(--ibd);border-radius:999px;font-size:10px;color:var(--itx);margin-left:auto}
+
+/* Import */
+.import-zone{border:0.5px dashed var(--bd2);border-radius:var(--rl);padding:1.25rem;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:1.25rem;position:relative}
+.import-zone:hover,.import-zone.drag{border-color:var(--bd3);background:var(--bg)}
+.import-zone.ok{border-style:solid;border-color:var(--stx);background:var(--sbg)}
+.iz-icon{font-size:20px;margin-bottom:5px}
+.iz-lbl{font-size:13px;color:var(--tx2);font-weight:500}
+.iz-hint{font-size:11px;color:var(--tx3);margin-top:3px}
+.import-zone.ok .iz-lbl{color:var(--stx)}
+.iz-clear{position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--tx3)}
+.iz-clear:hover{color:var(--tx)}
+.divider{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.dline{flex:1;height:.5px;background:var(--bd)}
+.dtxt{font-size:11px;color:var(--tx3)}
+
+/* Format & Template */
+.fmt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fmt-card{padding:.875rem;border:.5px solid var(--bd2);border-radius:var(--rl);cursor:pointer;transition:all .12s;display:flex;flex-direction:column;gap:5px}
+.fmt-card:hover{border-color:var(--bd3);background:var(--bg)}
+.fmt-card.sel{border-color:var(--tx);background:var(--bg)}
+.fi{width:28px;height:28px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.fi-w{background:#E3F0FF;color:#185FA5}.fi-x{background:#E3F4E8;color:#3B6D11}.fi-p{background:#FDEEE9;color:#993C1D}
+.fn{font-size:13px;font-weight:500;color:var(--tx)}.fd{font-size:11px;color:var(--tx2);line-height:1.4}
+.tpl-list{display:flex;flex-direction:column;gap:7px;margin-top:1rem}
+.tpl-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:.5px solid var(--bd2);border-radius:var(--r);cursor:pointer;transition:all .12s}
+.tpl-item:hover{border-color:var(--bd3);background:var(--bg)}
+.tpl-item.sel{border-color:var(--tx);background:var(--bg)}
+.tpl-name{font-size:13px;font-weight:500;color:var(--tx)}.tpl-desc{font-size:11px;color:var(--tx2);margin-top:1px}
+.radio{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--bd2);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tpl-item.sel .radio{border-color:var(--tx)}
+.rdot{width:6px;height:6px;border-radius:50%;background:var(--tx);display:none}
+.tpl-item.sel .rdot{display:block}
+
+/* Basisdaten */
+.title-row{display:flex;align-items:center;gap:8px}.title-row input{flex:1}
+.tsep{font-size:16px;color:var(--tx3);flex-shrink:0}
+.tprev{margin-top:5px;padding:5px 10px;background:var(--bg);border-radius:var(--r);font-size:12px;display:flex;gap:6px;align-items:center}
+.tprev-l{color:var(--tx3);flex-shrink:0}.tprev-v{color:var(--tx);font-weight:500;font-family:var(--mono)}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:1.125rem}
+.toggle{width:34px;height:19px;border-radius:999px;background:var(--bd2);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--tx)}
+.toggle::after{content:'';width:13px;height:13px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:left .2s}
+.toggle.on::after{left:18px}
+.tgl-lbl{font-size:13px;color:var(--tx2)}
+.ch-tree{display:flex;flex-direction:column;gap:6px}
+.ch-block{border:.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.ch-hdr{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--bg)}
+.ch-n{font-size:11px;color:var(--tx3);width:22px;flex-shrink:0}
+.ch-hdr input{flex:1;background:transparent;border:none;padding:0;font-size:13px;color:var(--tx);outline:none;font-family:var(--font)}
+.ch-hdr input::placeholder{color:var(--tx3)}
+.ch-acts{display:flex;gap:4px}
+.ch-btn{width:26px;height:26px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--card);cursor:pointer;color:var(--tx2);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ch-btn:hover{background:var(--bg);color:var(--tx)}
+.sub-list{padding:0 10px 8px 32px;display:flex;flex-direction:column;gap:5px;background:var(--card)}
+.sub-row{display:flex;align-items:center;gap:7px}
+.sub-n{font-size:11px;color:var(--tx3);width:32px;flex-shrink:0}
+.sub-row input{flex:1;padding:5px 8px;font-size:12px}
+.add-ch{font-size:12px;color:var(--tx2);background:none;border:.5px dashed var(--bd2);border-radius:var(--r);padding:6px 12px;cursor:pointer;width:100%;margin-top:4px}
+.add-ch:hover{border-color:var(--bd3);color:var(--tx)}
+.ref-list{display:flex;flex-direction:column;gap:7px}
+.ref-row{display:flex;gap:7px;align-items:center}
+.ref-row input:first-child{width:110px;flex-shrink:0}.ref-row input:last-child{flex:1}
+.icon-btn{width:28px;height:28px;border:.5px solid var(--bd2);border-radius:var(--r);background:transparent;cursor:pointer;color:var(--tx2);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-btn:hover{background:var(--bg)}
+
+/* Ergebnis */
+.result-tb{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1.5rem;border-bottom:.5px solid var(--bd);flex-wrap:wrap;gap:8px}
+.result-ttl{font-size:13px;color:var(--tx2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-btns{display:flex;gap:7px;align-items:center}
+.result-wrap{position:relative;margin:1rem 1.5rem}
+.result-body{font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--tx);background:var(--bg);border-radius:var(--r);border:.5px solid transparent;width:100%;min-height:280px;max-height:370px;padding:1rem;resize:vertical;outline:none;transition:border-color .15s;overflow-y:auto}
+.result-body:focus{border-color:var(--bd2)}
+.result-body.drag{border-color:var(--tx)}
+.drop-ov{display:none;position:absolute;inset:0;border-radius:var(--r);border:2px dashed var(--tx);align-items:center;justify-content:center;font-size:13px;color:var(--tx);pointer-events:none}
+.result-body.drag + .drop-ov{display:flex}
+.img-hint{display:flex;align-items:center;gap:8px;padding:.4rem 1.5rem .75rem;font-size:11px;color:var(--tx3)}
+.img-hint svg{width:13px;height:13px;flex-shrink:0}
+
+/* Footer & Buttons */
+.footer{padding:.875rem 1.5rem;border-top:.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.btn{padding:7px 16px;font-size:13px;font-family:var(--font);border-radius:var(--r);cursor:pointer;transition:all .15s}
+.btn-sec{background:transparent;border:.5px solid var(--bd2);color:var(--tx2)}
+.btn-sec:hover{background:var(--bg);color:var(--tx)}
+.btn-pri{background:var(--tx);border:none;color:white}
+.btn-pri:hover{opacity:.85}
+.btn-pri:disabled{opacity:.4;cursor:default}
+.btn-ai{background:var(--ibg);border:.5px solid var(--ibd);color:var(--itx)}
+.btn-ai:hover{opacity:.85}
+.btn-ai:disabled{opacity:.4;cursor:default}
+.copied{font-size:11px;color:var(--stx)}
+.err-box{padding:.75rem 1rem;background:var(--dbg);border:.5px solid var(--dtx);border-radius:var(--r);font-size:12px;color:var(--dtx);margin:1rem 1.5rem}
+#md-file-in{display:none}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<input type="file" id="md-file-in" accept=".md,.txt">
+<script>
+const AI_ENABLED = {{ 'true' if ai_enabled else 'false' }};
+
+const TEMPLATES={
+  word:[
+    {id:'intern',name:'Internes Dokument',desc:'Wissensdoku für interne Prozesse',hasAushang:true},
+    {id:'extern',name:'Externes Dokument',desc:'Wissensdoku für externe Weitergabe'},
+    {id:'kunde',name:'Kundenanleitung',desc:'Anleitung für einen spezifischen Kunden'}
+  ],
+  excel:[
+    {id:'netzwerk',name:'Netzwerkdokumentation',desc:'VLANs, IPs, Server, Switche, Zugänge'},
+    {id:'intern_xl',name:'Internes Dokument',desc:'Tabellarische interne Dokumentation'},
+    {id:'extern_xl',name:'Externes Dokument',desc:'Tabellarisch für externe Weitergabe'},
+    {id:'kunde_xl',name:'Kundenanleitung',desc:'Tabellarische Kundenanleitung'},
+    {id:'brief',name:'Briefvorlage',desc:'Briefvorlage'}
+  ],
+  ppt:[{id:'praesentation',name:'Präsentation',desc:'Titelfolie, Agenda, Inhaltsfolien, Abschluss'}]
+};
+
+const S={
+  step:1,
+  mode:'',         // 'import' | 'ai' | 'manual'
+  format:'',template:'',
+  titleSubject:'',titleTopic:'',aushang:false,
+  chapters:[{name:'',subs:['']}],refs:[{num:'',name:''}],
+  aiDescription:'',aiLoading:false,aiError:'',
+  markdownContent:'',importedFile:'',imgCounter:0,error:''
+};
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fullTitle(){return S.titleSubject&&S.titleTopic?S.titleSubject+' - '+S.titleTopic:S.titleSubject||S.titleTopic||'';}
+function getFormatLabel(){return S.format==='word'?'Word-Dokument (.docx)':S.format==='excel'?'Excel-Tabelle (.xlsx)':S.format==='ppt'?'PowerPoint (.pptx)':'Dokument erstellen';}
+
+// Schrittbezeichnungen je nach Modus
+function getSteps(){
+  if(S.mode==='ai') return ['Format & Vorlage','Basisdaten & KI','Erstellen'];
+  return ['Format & Vorlage','Basisdaten','Erstellen'];
+}
+
+function render(){
+  document.getElementById('app').innerHTML=renderHdr()+renderStepBar()+(
+    S.step===1?renderS1():S.step===2?renderS2():renderS3()
+  );
+  attach();
+}
+
+function renderHdr(){
+  const badges=[];
+  if(S.importedFile) badges.push(`<div class="badge">&#10003; ${esc(S.importedFile)}</div>`);
+  if(S.mode==='ai') badges.push(`<div class="badge ai-badge">&#10024; KI-Modus</div>`);
+  return `<div class="hdr">
+    <div class="hico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1.5"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="8" y2="11"/></svg></div>
+    <div><div class="htitle">WBI Dokumentations-Assistent</div><div class="hsub">Wissensdokument erstellen und verwalten</div></div>
+    ${badges.join('')}
+  </div>`;
+}
+
+function renderStepBar(){
+  const steps=getSteps();
+  return `<div class="steps">${steps.map((l,i)=>{const n=i+1,c=S.step===n?'active':S.step>n?'done':'';return`<div class="step ${c}"><span class="sn">${n}</span>${l}</div>`;}).join('')}</div>`;
+}
+
+// ── Schritt 1: Import / Format / Modus ────────────────────────────────────────
+function renderS1(){
+  const tpls=TEMPLATES[S.format]||[];
+  return `<div class="content">
+    <div class="sec">Bestehende Datei importieren</div>
+    <div class="import-zone${S.importedFile?' ok':''}" id="iz">
+      ${S.importedFile?`<button class="iz-clear" onclick="clearImp(event)">&#215;</button>`:''}
+      <div class="iz-icon">${S.importedFile?'&#10003;':'&#8595;'}</div>
+      <div class="iz-lbl">${S.importedFile?esc(S.importedFile):'Markdown-Datei hierher ziehen'}</div>
+      <div class="iz-hint">${S.importedFile?'Kapitel und Inhalt wurden übernommen':'oder <u style="cursor:pointer" id="iz-browse">Datei auswählen</u> &middot; .md, .txt'}</div>
+    </div>
+    <div class="divider"><div class="dline"></div><div class="dtxt">oder neu erstellen</div><div class="dline"></div></div>
+    ${AI_ENABLED?`<div class="mode-grid">
+      <div class="mode-card" onclick="setMode('manual')">
+        <div class="mode-icon" style="background:var(--bg)">&#128196;</div>
+        <div class="mode-name">Manuell erstellen</div>
+        <div class="mode-desc">Struktur selbst aufbauen und Inhalte direkt eingeben</div>
+      </div>
+      <div class="mode-card ai-card" onclick="setMode('ai')">
+        <div class="mode-icon" style="background:var(--ibg)">&#10024;</div>
+        <div class="mode-name">Mit KI erstellen</div>
+        <div class="mode-desc">Dokument per Beschreibung automatisch generieren lassen</div>
+      </div>
+    </div>`:''}
+    <div class="sec" style="margin-top:${AI_ENABLED?'0':'0'}">Dokumentformat</div>
+    <div class="fmt-grid">
+      <div class="fmt-card${S.format==='word'?' sel':''}" onclick="setFmt('word')"><div class="fi fi-w">W</div><div class="fn">Word</div><div class="fd">Textdokument, Anleitungen</div></div>
+      <div class="fmt-card${S.format==='excel'?' sel':''}" onclick="setFmt('excel')"><div class="fi fi-x">X</div><div class="fn">Excel</div><div class="fd">Tabellen, Netzwerkdoku</div></div>
+      <div class="fmt-card${S.format==='ppt'?' sel':''}" onclick="setFmt('ppt')"><div class="fi fi-p">P</div><div class="fn">PowerPoint</div><div class="fd">Präsentationen</div></div>
+    </div>
+    ${S.format?`<div class="tpl-list"><div class="sec" style="margin-top:1.25rem">Vorlage</div>
+      ${tpls.map(t=>`<div class="tpl-item${S.template===t.id?' sel':''}" onclick="setTpl('${t.id}')">
+        <div class="radio"><div class="rdot"></div></div>
+        <div><div class="tpl-name">${esc(t.name)}</div><div class="tpl-desc">${esc(t.desc)}</div></div>
+      </div>`).join('')}
+    </div>`:''}
+  </div>
+  <div class="footer"><span></span><button class="btn btn-pri" onclick="go(2)" ${!S.template?'disabled':''}>Weiter &#8594;</button></div>`;
+}
+
+// ── Schritt 2: Basisdaten (+ KI-Beschreibung wenn AI-Modus) ──────────────────
+function renderChapters(){
+  return S.chapters.map((ch,ci)=>`
+    <div class="ch-block">
+      <div class="ch-hdr"><span class="ch-n">${ci+1}.</span>
+        <input type="text" data-ch="${ci}" placeholder="Kapitelname" value="${esc(ch.name)}">
+        <div class="ch-acts">
+          <button class="ch-btn" data-addsub="${ci}" title="Unterkapitel">+</button>
+          <button class="ch-btn" data-rmch="${ci}">&#215;</button>
+        </div>
+      </div>
+      ${ch.subs.length?`<div class="sub-list">${ch.subs.map((s,si)=>`<div class="sub-row">
+        <span class="sub-n">${ci+1}.${si+1}</span>
+        <input type="text" data-sub="${ci}-${si}" placeholder="Unterkapitel" value="${esc(s)}">
+        <button class="ch-btn" data-rmsub="${ci}-${si}">&#215;</button>
+      </div>`).join('')}</div>`:''}
+    </div>`).join('');
+}
+
+function renderS2(){
+  const tpl=(TEMPLATES[S.format]||[]).find(x=>x.id===S.template);
+  const ft=fullTitle();const ok=S.titleSubject.trim()&&S.titleTopic.trim();
+  const isAI=S.mode==='ai';
+
+  const aiSection=isAI?`
+    <div class="ai-box">
+      <div class="ai-box-title">
+        &#10024; KI-Beschreibung
+        <span class="provider-pill">ChatGPT / OpenAI</span>
+      </div>
+      <textarea id="ai-desc" placeholder="Beschreibe was dokumentiert werden soll – je detaillierter, desto besser das Ergebnis.&#10;&#10;Beispiel: Schritt-für-Schritt-Anleitung zur Einrichtung des M365 Entra ID Sync für neue Mitarbeiter. Enthält Voraussetzungen, Konfigurationsschritte in Azure AD und abschließende Prüfung." style="min-height:110px">${esc(S.aiDescription)}</textarea>
+      <div class="ai-box-hint">Kapitelstruktur (optional) wird als Vorgabe an die KI übergeben.</div>
+    </div>
+    ${S.aiError?`<div class="err-box">${esc(S.aiError)}</div>`:''}
+  `:'';
+
+  return `<div class="content">
+    <div class="fg">
+      <label class="lbl">Dokumenttitel <span style="font-size:11px;color:var(--tx3)">— Themengebiet - Funktion/Thema</span></label>
+      <div class="title-row">
+        <input type="text" id="f-s" placeholder="Themengebiet  (z.B. M365)" value="${esc(S.titleSubject)}">
+        <span class="tsep">&ndash;</span>
+        <input type="text" id="f-t" placeholder="Funktion/Thema" value="${esc(S.titleTopic)}">
+      </div>
+      ${ft?`<div class="tprev"><span class="tprev-l">Titel:</span><span class="tprev-v">${esc(ft)}</span></div>`:`<div class="hint">z.B. M365 - Konfiguration Entra ID Sync</div>`}
+    </div>
+    ${tpl&&tpl.hasAushang?`<div class="toggle-row"><div class="toggle${S.aushang?' on':''}" id="tog"></div><span class="tgl-lbl">Aushang-Hinweis aufnehmen</span></div>`:''}
+    ${aiSection}
+    <div class="fg">
+      <label class="lbl">${isAI?'Kapitelstruktur <span style="font-size:11px;color:var(--tx3)">(optional – KI kann auch selbst strukturieren)</span>':'Kapitelstruktur'}</label>
+      <div class="ch-tree" id="ch-tree">${renderChapters()}</div>
+      <button class="add-ch" id="add-ch">+ Kapitel hinzufügen</button>
+    </div>
+    <div class="fg">
+      <label class="lbl">Mitgeltende Unterlagen <span style="font-size:11px;color:var(--tx3)">(optional)</span></label>
+      <div class="ref-list">${S.refs.map((r,i)=>`<div class="ref-row">
+        <input type="text" data-rn="${i}" placeholder="WBI-Nr." value="${esc(r.num)}">
+        <input type="text" data-rv="${i}" placeholder="Bezeichnung" value="${esc(r.name)}">
+        <button class="icon-btn" data-rmref="${i}">&#215;</button>
+      </div>`).join('')}</div>
+      <button class="add-ch" id="add-ref">+ Unterlage hinzufügen</button>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-sec" onclick="go(1)">&#8592; Zurück</button>
+    <div style="display:flex;gap:8px">
+      ${isAI?`<button class="btn btn-sec" onclick="skipAI()" ${!ok?'disabled':''}>Ohne KI weiter</button>
+              <button class="btn btn-ai" id="btn-ai-gen" onclick="runAI()" ${(!ok||!S.aiDescription.trim())?'disabled':''}>&#10024; Mit KI generieren</button>`
+            :`<button class="btn btn-pri" id="btn-n2" onclick="go(3)" ${!ok?'disabled':''}>Weiter &#8594;</button>`}
+    </div>
+  </div>`;
+}
+
+// ── Schritt 3: Editor + Erstellen ─────────────────────────────────────────────
+function renderS3(){
+  if(S.aiLoading) return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;gap:1rem;">
+    <div class="spin" style="width:28px;height:28px;border-width:3px"></div>
+    <div style="font-size:13px;color:var(--itx)">KI generiert Dokument&#8230;</div>
+    <div style="font-size:11px;color:var(--tx3)">Dies kann einige Sekunden dauern</div>
+  </div>`;
+  return `
+    <div class="result-tb">
+      <span class="result-ttl">${esc(fullTitle()||'Dokument')}</span>
+      <div class="tb-btns">
+        <span class="copied" id="cp-msg" style="display:none">Kopiert!</span>
+        <button class="btn btn-sec" onclick="copyMd()">Kopieren</button>
+        <button class="btn btn-sec" onclick="go(1)">Neu</button>
+      </div>
+    </div>
+    ${S.error?`<div class="err-box">${esc(S.error)}</div>`:''}
+    <div class="result-wrap">
+      <textarea class="result-body" id="rb" spellcheck="false">${esc(S.markdownContent)}</textarea>
+      <div class="drop-ov">Bilder hier ablegen</div>
+    </div>
+    <div class="img-hint">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><circle cx="5.5" cy="7" r="1"/><path d="M1 11l4-3 3 2.5 3-3 4 3.5"/></svg>
+      Bilder: Screenshot einkopieren (Strg+V) &middot; Bilddateien in den Editor ziehen
+    </div>
+    <div class="footer">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sec" onclick="go(2)">&#8592; Überarbeiten</button>
+        <button class="btn btn-sec" onclick="saveMd()">Als .md</button>
+      </div>
+      <button class="btn btn-pri" id="btn-create" onclick="createDoc()">${getFormatLabel()} erstellen</button>
+    </div>`;
+}
+
+// ── Event-Handler ─────────────────────────────────────────────────────────────
+function attach(){
+  const iz=document.getElementById('iz');
+  if(iz){
+    iz.addEventListener('dragover',e=>{e.preventDefault();iz.classList.add('drag');});
+    iz.addEventListener('dragleave',()=>iz.classList.remove('drag'));
+    iz.addEventListener('drop',e=>{e.preventDefault();iz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadMdFile(f);});
+    const br=document.getElementById('iz-browse');
+    if(br)br.addEventListener('click',()=>document.getElementById('md-file-in').click());
+  }
+  document.getElementById('md-file-in').onchange=e=>{if(e.target.files[0])loadMdFile(e.target.files[0]);e.target.value='';};
+
+  const fs=document.getElementById('f-s');const ft=document.getElementById('f-t');
+  if(fs)fs.addEventListener('input',e=>{S.titleSubject=e.target.value;updateBtns();updatePrev();});
+  if(ft)ft.addEventListener('input',e=>{S.titleTopic=e.target.value;updateBtns();updatePrev();});
+  const tog=document.getElementById('tog');
+  if(tog)tog.addEventListener('click',()=>{S.aushang=!S.aushang;tog.className='toggle'+(S.aushang?' on':'');});
+
+  const aiDesc=document.getElementById('ai-desc');
+  if(aiDesc)aiDesc.addEventListener('input',e=>{S.aiDescription=e.target.value;updateBtns();});
+
+  document.querySelectorAll('[data-ch]').forEach(el=>el.addEventListener('input',()=>S.chapters[+el.dataset.ch].name=el.value));
+  document.querySelectorAll('[data-sub]').forEach(el=>el.addEventListener('input',()=>{const[ci,si]=el.dataset.sub.split('-').map(Number);S.chapters[ci].subs[si]=el.value;}));
+  document.querySelectorAll('[data-addsub]').forEach(el=>el.addEventListener('click',()=>{S.chapters[+el.dataset.addsub].subs.push('');rerenderCh();}));
+  document.querySelectorAll('[data-rmch]').forEach(el=>el.addEventListener('click',()=>{S.chapters.splice(+el.dataset.rmch,1);if(!S.chapters.length)S.chapters=[{name:'',subs:['']}];rerenderCh();}));
+  document.querySelectorAll('[data-rmsub]').forEach(el=>el.addEventListener('click',()=>{const[ci,si]=el.dataset.rmsub.split('-').map(Number);S.chapters[ci].subs.splice(si,1);rerenderCh();}));
+  const ac=document.getElementById('add-ch');if(ac)ac.addEventListener('click',()=>{S.chapters.push({name:'',subs:['']});rerenderCh();});
+  document.querySelectorAll('[data-rn]').forEach(el=>el.addEventListener('input',()=>S.refs[+el.dataset.rn].num=el.value));
+  document.querySelectorAll('[data-rv]').forEach(el=>el.addEventListener('input',()=>S.refs[+el.dataset.rv].name=el.value));
+  document.querySelectorAll('[data-rmref]').forEach(el=>el.addEventListener('click',()=>{S.refs.splice(+el.dataset.rmref,1);if(!S.refs.length)S.refs=[{num:'',name:''}];render();}));
+  const ar=document.getElementById('add-ref');if(ar)ar.addEventListener('click',()=>{S.refs.push({num:'',name:''});render();});
+
+  const rb=document.getElementById('rb');
+  if(rb){
+    rb.addEventListener('input',()=>S.markdownContent=rb.value);
+    rb.addEventListener('paste',e=>{const img=[...e.clipboardData.items].find(i=>i.type.startsWith('image/'));if(img){e.preventDefault();insertImg(img.getAsFile(),rb);}});
+    rb.addEventListener('dragover',e=>{e.preventDefault();rb.classList.add('drag');});
+    rb.addEventListener('dragleave',e=>{if(!rb.contains(e.relatedTarget))rb.classList.remove('drag');});
+    rb.addEventListener('drop',async e=>{
+      e.preventDefault();rb.classList.remove('drag');
+      for(const item of[...e.dataTransfer.items]){
+        const en=item.webkitGetAsEntry&&item.webkitGetAsEntry();
+        if(en&&en.isDirectory){const fs=await readDir(en);for(const f of fs)if(f.type.startsWith('image/'))await insertImg(f,rb);}
+        else{const f=en?(await new Promise(r=>en.file(r))):item.getAsFile();if(f&&f.type.startsWith('image/'))await insertImg(f,rb);}
+      }
+    });
+  }
+}
+
+function rerenderCh(){const ct=document.getElementById('ch-tree');if(!ct){render();return;}ct.innerHTML=renderChapters();attach();}
+function updateBtns(){
+  const ok=S.titleSubject.trim()&&S.titleTopic.trim();
+  const b2=document.getElementById('btn-n2');if(b2)b2.disabled=!ok;
+  const bai=document.getElementById('btn-ai-gen');if(bai)bai.disabled=!ok||!S.aiDescription.trim();
+  const bsk=document.querySelector('button[onclick="skipAI()"]');if(bsk)bsk.disabled=!ok;
+}
+function updatePrev(){
+  const ft=fullTitle();const w=document.querySelector('.tprev,.hint');if(!w)return;
+  if(ft){w.className='tprev';w.innerHTML=`<span class="tprev-l">Titel:</span><span class="tprev-v">${esc(ft)}</span>`;}
+  else{w.className='hint';w.textContent='z.B. M365 - Konfiguration Entra ID Sync';}
+}
+function setFmt(f){S.format=f;S.template='';render();}
+function setTpl(id){S.template=id;render();}
+function setMode(m){S.mode=m;}
+function go(n){
+  S.error='';
+  if(n===3&&!S.markdownContent&&S.mode!=='ai'){S.markdownContent=buildMd();}
+  S.step=n;render();
+}
+function skipAI(){S.mode='manual';go(3);}
+
+// ── KI-Generierung ─────────────────────────────────────────────────────────────
+async function runAI(){
+  S.aiError='';S.aiLoading=true;S.step=3;render();
+  try{
+    const resp=await fetch('/ai-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        description:S.aiDescription,
+        title:fullTitle(),
+        format:S.format,
+        template:S.template,
+        chapters:S.chapters,
+        aushang:S.aushang,
+        refs:S.refs
+      })
+    });
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.error||`HTTP ${resp.status}`);
+    S.markdownContent=data.markdown;
+  }catch(e){
+    S.aiError=e.message;
+    S.step=2;
+  }
+  S.aiLoading=false;
+  render();
+}
+
+// ── Markdown aufbauen ─────────────────────────────────────────────────────────
+function buildMd(){
+  const tpl=(TEMPLATES[S.format]||[]).find(x=>x.id===S.template);
+  const vch=S.chapters.filter(c=>c.name.trim());
+  const vref=S.refs.filter(r=>r.num.trim()||r.name.trim());
+  let off=1;const toc=[];
+  if(S.aushang&&tpl&&tpl.hasAushang){toc.push(`${off}. [Aushang](#${off}-aushang)`);off++;}
+  if(vref.length){toc.push(`${off}. [Mitgeltende Unterlagen](#${off}-mitgeltende-unterlagen)`);off++;}
+  vch.forEach((c,i)=>{const n=off+i;toc.push(`${n}. [${c.name}](#${n}-${c.name.toLowerCase().replace(/[^a-z0-9äöü]+/g,'-')})`);});
+  let md=`# ${fullTitle()}\n\n---\n\n## Inhaltsverzeichnis\n\n${toc.map(t=>`- ${t}`).join('\n')}\n\n---\n\n`;
+  let sn=1;
+  if(S.aushang&&tpl&&tpl.hasAushang){md+=`## ${sn}. Aushang\n\nDieses Dokument hängt/liegt aus.\n\n> ⚠️ Die ausgedruckte Version kann veraltet sein.\n\n---\n\n`;sn++;}
+  if(vref.length){md+=`## ${sn}. Mitgeltende Unterlagen\n\n| DMS-Link / WBI-Nummer | Bezeichnung |\n|---|---|\n`;vref.forEach(r=>{md+=`| ${r.num||'—'} | ${r.name||'—'} |\n`;});md+=`\n---\n\n`;sn++;}
+  if(vch.length){vch.forEach((ch,i)=>{const n=sn+i;md+=`## ${n}. ${ch.name}\n\n`;const vs=ch.subs.filter(s=>s.trim());if(vs.length){vs.forEach((s,si)=>{md+=`### ${n}.${si+1} ${s}\n\n_Inhalt hier einfügen._\n\n`;});}else md+=`_Inhalt hier einfügen._\n\n`;if(i<vch.length-1)md+=`---\n\n`;});}
+  else{md+=`## ${sn}. Kapitel\n\n_Inhalt hier einfügen._\n\n`;}
+  return md.trim();
+}
+
+// ── Import ────────────────────────────────────────────────────────────────────
+function parseMd(text){
+  const lines=text.split('\n');let titleRaw='';const chapters=[];let cc=null;
+  const skip=['Inhaltsverzeichnis','Aushang','Mitgeltende Unterlagen'];
+  for(const l of lines){
+    if(!titleRaw&&l.startsWith('# ')){titleRaw=l.slice(2).trim();continue;}
+    if(l.startsWith('## ')){const n=l.replace(/^##\s+\d+\.\s*/,'').trim();if(skip.some(s=>n.toLowerCase().includes(s.toLowerCase())))continue;cc={name:n,subs:[]};chapters.push(cc);}
+    else if(l.startsWith('### ')&&cc){const s=l.replace(/^###\s+[\d.]+\s*/,'').trim();if(s)cc.subs.push(s);}
+  }
+  return{titleRaw,chapters};
+}
+function loadMdFile(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    const text=e.target.result;
+    const{titleRaw,chapters}=parseMd(text);
+    if(titleRaw){const i=titleRaw.indexOf(' - ');if(i>-1){S.titleSubject=titleRaw.slice(0,i);S.titleTopic=titleRaw.slice(i+3);}else{S.titleSubject=titleRaw;S.titleTopic='';}}
+    if(chapters.length)S.chapters=chapters.map(c=>({name:c.name,subs:c.subs.length?c.subs:['']}));
+    S.markdownContent=text;S.importedFile=file.name;S.mode='import';render();
+  };
+  r.readAsText(file);
+}
+function clearImp(e){e.stopPropagation();S.importedFile='';S.markdownContent='';S.titleSubject='';S.titleTopic='';S.chapters=[{name:'',subs:['']}];S.mode='';render();}
+
+// ── Bild-Insert ────────────────────────────────────────────────────────────────
+async function readDir(entry){return new Promise(resolve=>{const r=entry.createReader();const all=[];function b(){r.readEntries(async es=>{if(!es.length){resolve(all);return;}for(const e of es){if(e.isFile){const f=await new Promise(r=>e.file(r));all.push(f);}else if(e.isDirectory){const s=await readDir(e);all.push(...s);}}b();});}b();});}
+async function insertImg(file,ta){return new Promise(r=>{const rd=new FileReader();rd.onload=e=>{S.imgCounter++;const nm=file.name.replace(/\.[^.]+$/,'').replace(/\s+/g,'_')||`bild_${S.imgCounter}`;const tag=`\n![${nm}](${e.target.result})\n`;const pos=ta.selectionStart;ta.value=ta.value.slice(0,pos)+tag+ta.value.slice(pos);ta.selectionStart=ta.selectionEnd=pos+tag.length;S.markdownContent=ta.value;r();};rd.readAsDataURL(file);});}
+
+// ── Dokument erstellen ────────────────────────────────────────────────────────
+async function createDoc(){
+  const btn=document.getElementById('btn-create');
+  if(btn){btn.disabled=true;btn.textContent='Wird erstellt\u2026';}
+  S.error='';
+  const rb=document.getElementById('rb');if(rb)S.markdownContent=rb.value;
+  try{
+    const resp=await fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({format:S.format,template:S.template,titleSubject:S.titleSubject,titleTopic:S.titleTopic,aushang:S.aushang,chapters:S.chapters,refs:S.refs,markdownContent:S.markdownContent})});
+    if(!resp.ok){const err=await resp.json();throw new Error(err.error||`HTTP ${resp.status}`);}
+    const blob=await resp.blob();
+    const cd=resp.headers.get('Content-Disposition')||'';
+    const fnM=cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const fn=fnM?fnM[1].replace(/['"]/g,''):(fullTitle().replace(/[^a-zA-Z0-9äöüÄÖÜß _-]/g,'_')+'.docx');
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=fn;a.style.cssText='position:fixed;top:-9999px';document.body.appendChild(a);
+    a.dispatchEvent(new MouseEvent('click',{bubbles:false}));
+    setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},500);
+  }catch(e){S.error=e.message;render();}
+  if(btn){btn.disabled=false;btn.textContent=getFormatLabel()+' erstellen';}
+}
+
+function copyMd(){const rb=document.getElementById('rb');navigator.clipboard.writeText(rb?rb.value:S.markdownContent).then(()=>{const m=document.getElementById('cp-msg');if(m){m.style.display='inline';setTimeout(()=>m.style.display='none',2000);}});}
+function saveMd(){const rb=document.getElementById('rb');const text=rb?rb.value:S.markdownContent;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=fullTitle().replace(/[^a-zA-Z0-9äöüÄÖÜß _-]/g,'_')+'.md';a.style.cssText='position:fixed;top:-9999px';document.body.appendChild(a);a.dispatchEvent(new MouseEvent('click',{bubbles:false}));setTimeout(()=>document.body.removeChild(a),500);}
+
+render();
+</script>
+</body>
+</html>
