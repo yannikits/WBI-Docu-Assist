@@ -1,13 +1,13 @@
 """
 Anthropic Claude Provider
-Unterstützt: claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5-20251001
+Untersützt: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5-20251001
 """
 
 from ai_providers.base import AIProvider
 
 
 class AnthropicProvider(AIProvider):
-    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514"):
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-6"):
         if not api_key:
             raise ValueError("Anthropic API-Key fehlt. Bitte in config.ini eintragen.")
         self.api_key = api_key
@@ -28,7 +28,7 @@ class AnthropicProvider(AIProvider):
 
         message = client.messages.create(
             model=self.model,
-            max_tokens=4000,
+            max_tokens=8000,
             messages=[{"role": "user", "content": prompt}],
         )
 
