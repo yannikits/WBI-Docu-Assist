@@ -95,7 +95,6 @@ Formatierungsregeln:
 - Mitgeltende Unterlagen als Tabelle (nur wenn vorhanden)
 - Kapitel vollständig und fachlich korrekt ausschreiben
 - Kein Abschnitt "Hinweise zur Vorlage"
-- Keine Bilder, Screenshots oder Bildplatzhalter einfügen – Bilder werden vom Nutzer manuell hinzugefügt
 - Nur Markdown ausgeben, keine Erklärungen davor oder danach"""
 
 
